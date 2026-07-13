@@ -210,10 +210,11 @@ export default function AuthPage() {
             ))}
           </motion.div>
 
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.form
-              key={mode}
-              onSubmit={submit}
+          <div className="form-stage">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.form
+                key={mode}
+                onSubmit={submit}
               initial={{ opacity: 0, x: mode === 'register' ? 26 : -26 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: mode === 'register' ? -26 : 26 }}
@@ -272,7 +273,8 @@ export default function AuthPage() {
                 {busy ? 'One sec…' : mode === 'register' ? 'Create free account' : 'Sign in'}
               </motion.button>
             </motion.form>
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         </div>
 
         <motion.div className="panel-foot" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>

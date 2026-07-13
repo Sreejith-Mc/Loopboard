@@ -539,6 +539,12 @@ textarea.input {
   font-size: 12px;
   color: var(--ink-mute);
 }
+/* Fixed-height stage for the sign-in/register forms: the register form is
+   taller, and without a stable height the centered block re-centers and the
+   heading + tabs jump on every switch. */
+.form-stage {
+  min-height: 300px;
+}
 
 /* animated sign in / create account tabs */
 .auth-tabs {
