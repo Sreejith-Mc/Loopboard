@@ -183,6 +183,10 @@ export default function Dashboard() {
     return boards.filter((b) => b.teamId === scope);
   }, [boards, scope]);
 
+  // After logout this component briefly re-renders while exit-animating with
+  // user already null — bail out (after all hooks) instead of crashing blank.
+  if (!user) return null;
+
   const scopeTeam = teams.find((t) => t.id === scope);
   const greeting = (() => {
     const h = new Date().getHours();

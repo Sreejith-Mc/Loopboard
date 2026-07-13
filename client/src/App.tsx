@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Component, ReactNode, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from './store';
 import AuthPage from './components/AuthPage';
@@ -15,6 +15,28 @@ const SHORTCUTS: [string, string][] = [
   ['Esc', 'Close dialogs and menus'],
   ['?', 'Show this cheat sheet'],
 ];
+
+/** Last line of defense: a crash should show a way back, never a blank page. */
+class ErrorBoundary extends Component<{ children: ReactNode }, { crashed: boolean }> {
+  state = { crashed: false };
+  static getDerivedStateFromError() {
+    return { crashed: true };
+  }
+  render() {
+    if (this.state.crashed) {
+      return (
+        <div className="page-loading" style={{ flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 34 }}>😵‍💫</div>
+          <div style={{ fontWeight: 700 }}>Something went sideways</div>
+          <button className="btn btn-primary" onClick={() => window.location.reload()}>
+            Reload Loopboard
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function isTyping() {
   const el = document.activeElement;
@@ -60,7 +82,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <AnimatePresence mode="wait">
         {view === 'auth' && (
           <motion.div
@@ -121,6 +143,6 @@ export default function App() {
         )}
       </AnimatePresence>
       <Toasts />
-    </>
+    </ErrorBoundary>
   );
 }
