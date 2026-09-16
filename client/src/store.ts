@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api, ApiError } from './api';
-import type { Board, BoardSummary, Card, Team, User } from './types';
+import type { AdminStatus, Board, BoardSummary, Card, Team, User } from './types';
 
 export interface Toast {
   id: number;
@@ -29,8 +29,14 @@ interface State {
   openCardId: string | null;
   quickAddColumnId: string | null;
   paletteOpen: boolean;
+  adminStatus: AdminStatus | null;
+  adminBusy: boolean;
+  tourOpen: boolean;
 
   setTheme: (theme: Theme) => void;
+  setTourOpen: (open: boolean) => void;
+  loadAdminStatus: () => Promise<void>;
+  runKeepalive: () => Promise<void>;
   setOpenCard: (id: string | null) => void;
   setQuickAddColumn: (id: string | null) => void;
   setPaletteOpen: (open: boolean) => void;
@@ -141,6 +147,40 @@ export const useStore = create<State>((set, get) => ({
   openCardId: null,
   quickAddColumnId: null,
   paletteOpen: false,
+  adminStatus: null,
+  adminBusy: false,
+  tourOpen: false,
+
+  setTourOpen: (open) => {
+    if (!open) localStorage.setItem('lb-tour-seen', '1');
+    set({ tourOpen: open });
+  },
+
+  loadAdminStatus: async () => {
+    if (!get().user?.isAdmin) return;
+    try {
+      set({ adminStatus: await api.get<AdminStatus>('/api/admin/status') });
+    } catch {
+      set({ adminStatus: { db: { ok: false, detail: 'Could not reach the API' }, runs: [] } });
+    }
+  },
+
+  runKeepalive: async () => {
+    if (get().adminBusy) return;
+    set({ adminBusy: true });
+    try {
+      const r = await api.post<{ ok: boolean; detail: string }>('/api/admin/keepalive');
+      get().toast(
+        r.ok ? 'Database is awake and responding' : `Database did not respond — ${r.detail}`,
+        r.ok ? 'success' : 'error',
+      );
+    } catch {
+      get().toast('Couldn’t reach the server to run the check', 'error');
+    } finally {
+      set({ adminBusy: false });
+      await get().loadAdminStatus();
+    }
+  },
 
   setTheme: (theme) => {
     document.documentElement.dataset.theme = theme;
@@ -173,6 +213,7 @@ export const useStore = create<State>((set, get) => ({
     } catch {
       set({ authChecked: true });
     }
+    void get().loadAdminStatus();
     window.addEventListener('hashchange', async () => {
       const id = boardIdFromHash();
       const { board, user } = get();
@@ -186,12 +227,16 @@ export const useStore = create<State>((set, get) => ({
     const { user } = await api.post<{ user: User }>('/api/auth/login', { email, password });
     set({ user });
     await get().loadWorkspace();
+    void get().loadAdminStatus();
   },
 
   register: async (name, email, password) => {
     const { user } = await api.post<{ user: User }>('/api/auth/register', { name, email, password });
     set({ user });
     await get().loadWorkspace();
+    void get().loadAdminStatus();
+    // A brand-new account is exactly who the tour is for.
+    if (!localStorage.getItem('lb-tour-seen')) set({ tourOpen: true });
   },
 
   logout: async () => {
@@ -202,7 +247,7 @@ export const useStore = create<State>((set, get) => ({
     }
     stopLiveSync();
     window.location.hash = '';
-    set({ user: null, teams: [], boards: [], board: null });
+    set({ user: null, teams: [], boards: [], board: null, adminStatus: null });
   },
 
   loadWorkspace: async () => {

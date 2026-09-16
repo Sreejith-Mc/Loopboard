@@ -6,6 +6,7 @@ import { BOARD_EMOJIS, timeAgo } from '../utils';
 import Avatar from './Avatar';
 import Modal from './Modal';
 import ThemeToggle from './ThemeToggle';
+import AdminPanel from './AdminPanel';
 import type { Team } from '../types';
 
 function NewBoardModal({ teamId, onClose }: { teamId: string | null; onClose: () => void }) {
@@ -172,10 +173,11 @@ function TeamModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function Dashboard() {
-  const { user, teams, boards, openBoard, logout } = useStore();
+  const { user, teams, boards, openBoard, logout, setTourOpen } = useStore();
   const [scope, setScope] = useState<'all' | 'personal' | string>('all');
   const [newBoard, setNewBoard] = useState(false);
   const [teamModal, setTeamModal] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const visible = useMemo(() => {
     if (scope === 'all') return boards;
@@ -197,7 +199,26 @@ export default function Dashboard() {
 
   return (
     <div className="dash">
-      <aside className="sidebar">
+      <div className="mobile-bar">
+        <button className="btn-icon" aria-label="Open menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        <span className="logo">
+          <span className="logo-mark">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <rect x="5" y="4" width="5" height="16" rx="2.5" fill="#fff" />
+              <rect x="14" y="4" width="5" height="10" rx="2.5" fill="#fff" opacity="0.85" />
+            </svg>
+          </span>
+          Loopboard
+        </span>
+      </div>
+
+      {menuOpen && <div className="drawer-backdrop" onClick={() => setMenuOpen(false)} />}
+
+      <aside className={`sidebar${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(false)}>
         <span className="logo">
           <span className="logo-mark">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -237,12 +258,21 @@ export default function Dashboard() {
           </button>
         ))}
 
+        <AdminPanel />
+
         <div className="side-footer">
           <Avatar name={user!.name} color={user!.avatarColor} />
           <div className="who">
             <div className="n">{user!.name}</div>
             <div className="e">{user!.email}</div>
           </div>
+          <button className="btn-icon" title="How Loopboard works" onClick={() => setTourOpen(true)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.6.2-.9.7-.9 1.3v.6" />
+              <path d="M12 17h.01" />
+            </svg>
+          </button>
           <ThemeToggle />
           <button className="btn-icon" title="Sign out" onClick={() => void logout()}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

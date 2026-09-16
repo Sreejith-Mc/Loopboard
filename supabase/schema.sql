@@ -68,6 +68,19 @@ create table if not exists cards (
   updated_at  bigint not null
 );
 
+-- Supabase pauses a free-tier project after ~7 days with no activity. A daily
+-- cron hits the database and records the result here, which both keeps the
+-- project awake and gives the admin panel something to show.
+create table if not exists keepalive_runs (
+  id     text primary key,
+  ran_at bigint not null,
+  ok     boolean not null,
+  source text not null,          -- 'cron' or 'manual'
+  detail text
+);
+
+create index if not exists idx_keepalive_ran_at on keepalive_runs(ran_at desc);
+
 create index if not exists idx_cards_board    on cards(board_id);
 create index if not exists idx_cards_column   on cards(column_id, position);
 create index if not exists idx_columns_board  on columns(board_id, position);
@@ -88,3 +101,4 @@ alter table team_members enable row level security;
 alter table boards       enable row level security;
 alter table columns      enable row level security;
 alter table cards        enable row level security;
+alter table keepalive_runs enable row level security;

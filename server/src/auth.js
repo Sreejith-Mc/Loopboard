@@ -4,6 +4,33 @@ import { q, one } from './db.js';
 const SESSION_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
 const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
 
+/**
+ * Who may see and use the admin controls, as a comma-separated ADMIN_EMAILS.
+ * Kept in the environment rather than in source: this repo is public, and a
+ * personal address committed to it is a gift to address scrapers. It also
+ * means the list can change without a code edit.
+ */
+function adminEmails() {
+  return (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+export function isAdminEmail(email) {
+  const list = adminEmails();
+  if (list.length === 0) return false; // unset means nobody, never everybody
+  return list.includes(String(email || '').trim().toLowerCase());
+}
+
+/** Express middleware: 404s for non-admins, so the route's existence stays quiet. */
+export function requireAdmin(req, res, next) {
+  if (!req.user || !isAdminEmail(req.user.email)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  next();
+}
+
 export function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
   const hash = crypto.scryptSync(password, salt, 64).toString('hex');
@@ -60,7 +87,10 @@ export async function requireAuth(req, res, next) {
       if (row) await destroySession(token);
       return res.status(401).json({ error: 'Session expired' });
     }
-    req.user = { id: row.id, name: row.name, email: row.email, avatarColor: row.avatarColor };
+    req.user = {
+      id: row.id, name: row.name, email: row.email, avatarColor: row.avatarColor,
+      isAdmin: isAdminEmail(row.email),
+    };
     req.sessionToken = token;
     next();
   } catch (err) {

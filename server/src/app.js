@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import { q, one, tx } from './db.js';
 import {
   hashPassword, verifyPassword, createSession, destroySession,
-  setSessionCookie, requireAuth, pickAvatarColor,
+  setSessionCookie, requireAuth, requireAdmin, isAdminEmail, pickAvatarColor,
 } from './auth.js';
 
 export const app = express();
@@ -127,6 +127,72 @@ async function seedWelcomeBoard(userId, ex) {
   }
 }
 
+// ---------- keep-alive ----------
+
+/**
+ * Touch the database and record the attempt.
+ *
+ * Supabase pauses a free-tier project after roughly a week of no activity, so
+ * a daily cron runs this to keep it awake. The same function backs the manual
+ * button, which is there for the case where something looks wrong and you want
+ * an immediate, honest answer about whether the database is reachable.
+ */
+async function runKeepalive(source) {
+  const ranAt = now();
+  let ok = true;
+  let detail = 'Database responded normally';
+  try {
+    await q('SELECT 1');
+  } catch (err) {
+    ok = false;
+    detail = String(err.message || err).slice(0, 300);
+  }
+  try {
+    await q(
+      'INSERT INTO keepalive_runs (id, ran_at, ok, source, detail) VALUES ($1, $2, $3, $4, $5)',
+      [uid(), ranAt, ok, source, detail]);
+    // Keep the log from growing without bound.
+    await q('DELETE FROM keepalive_runs WHERE ran_at < $1', [ranAt - 90 * 24 * 60 * 60 * 1000]);
+  } catch {
+    // If the ping failed, this write fails too — `ok` already carries that.
+  }
+  return { ok, ranAt, source, detail };
+}
+
+// Called by Vercel Cron (see vercel.json). Vercel attaches
+// `Authorization: Bearer $CRON_SECRET` when that variable is set, so anyone
+// else hitting this path is turned away.
+app.get('/api/cron/keepalive', a(async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret && req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const result = await runKeepalive('cron');
+  res.status(result.ok ? 200 : 503).json(result);
+}));
+
+app.post('/api/admin/keepalive', requireAuth, requireAdmin, a(async (req, res) => {
+  res.json(await runKeepalive('manual'));
+}));
+
+app.get('/api/admin/status', requireAuth, requireAdmin, a(async (req, res) => {
+  let dbOk = true;
+  let dbDetail = 'Database responded normally';
+  try {
+    await q('SELECT 1');
+  } catch (err) {
+    dbOk = false;
+    dbDetail = String(err.message || err).slice(0, 300);
+  }
+  let runs = [];
+  if (dbOk) {
+    runs = await q(
+      `SELECT ran_at AS "ranAt", ok, source, detail
+       FROM keepalive_runs ORDER BY ran_at DESC LIMIT 5`);
+  }
+  res.json({ db: { ok: dbOk, detail: dbDetail }, runs });
+}));
+
 // ---------- auth ----------
 
 app.post('/api/auth/register', a(async (req, res) => {
@@ -148,7 +214,7 @@ app.post('/api/auth/register', a(async (req, res) => {
   });
   setSessionCookie(res, await createSession(id));
   const user = await one('SELECT id, name, email, avatar_color AS "avatarColor" FROM users WHERE id = $1', [id]);
-  res.json({ user });
+  res.json({ user: { ...user, isAdmin: isAdminEmail(user.email) } });
 }));
 
 app.post('/api/auth/login', a(async (req, res) => {
@@ -158,7 +224,12 @@ app.post('/api/auth/login', a(async (req, res) => {
     return res.status(401).json({ error: 'Wrong email or password' });
   }
   setSessionCookie(res, await createSession(found.id));
-  res.json({ user: { id: found.id, name: found.name, email: found.email, avatarColor: found.avatar_color } });
+  res.json({
+    user: {
+      id: found.id, name: found.name, email: found.email,
+      avatarColor: found.avatar_color, isAdmin: isAdminEmail(found.email),
+    },
+  });
 }));
 
 app.post('/api/auth/logout', requireAuth, a(async (req, res) => {

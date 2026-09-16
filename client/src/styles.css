@@ -1709,3 +1709,283 @@ html[data-theme='dark'] .filter-chips button.on {
   align-items: center;
   justify-content: center;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Admin panel — database health, only rendered for admins
+   ───────────────────────────────────────────────────────────── */
+.admin-panel {
+  margin-top: auto;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.admin-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.admin-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px var(--green-soft);
+  flex-shrink: 0;
+}
+.admin-dot.bad {
+  background: var(--red);
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18);
+}
+.admin-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+}
+.admin-state {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+.admin-last {
+  font-size: 11.5px;
+  color: var(--ink-mute);
+}
+.admin-btn {
+  width: 100%;
+  justify-content: center;
+  font-size: 12.5px;
+  padding: 7px 10px;
+}
+.admin-err {
+  font-size: 11px;
+  color: var(--red);
+  line-height: 1.4;
+  max-height: 3.2em;
+  overflow: hidden;
+}
+.admin-panel + .side-footer {
+  margin-top: 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Tour
+   ───────────────────────────────────────────────────────────── */
+.tour {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.tour-art {
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.tour-body {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.62;
+  margin-top: 8px;
+}
+.tour-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.tour-dots {
+  display: flex;
+  gap: 6px;
+  margin-right: auto;
+}
+.tour-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: var(--line-strong);
+  transition: background 0.2s ease, width 0.2s ease;
+}
+.tour-dot.on {
+  width: 20px;
+  border-radius: 4px;
+  background: var(--blue);
+}
+.tour-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Mobile
+   The sidebar becomes an off-canvas drawer, the board scrolls one
+   column at a time, and every control grows to a thumb-sized target.
+   ───────────────────────────────────────────────────────────── */
+.mobile-bar {
+  display: none;
+}
+.drawer-backdrop {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .dash {
+    grid-template-columns: 1fr;
+    /* The sidebar is fixed (out of flow) here, so the only rows in flow are
+       the bar and the content. Without this they split the height evenly and
+       the bar grows to half the screen. */
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .mobile-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .mobile-bar .logo {
+    padding: 0;
+    font-size: 15px;
+  }
+
+  .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 18, 32, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 40;
+    animation: lb-fade 0.18s ease;
+  }
+  @keyframes lb-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(82vw, 300px);
+    z-index: 50;
+    transform: translateX(-102%);
+    transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: var(--shadow-lg);
+    background: var(--surface);
+    overflow-y: auto;
+  }
+  html[data-theme='dark'] .sidebar {
+    background: var(--surface);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .dash-main {
+    padding: 20px 16px 36px;
+  }
+  .dash-head {
+    margin-bottom: 20px;
+  }
+  .dash-head h1 {
+    font-size: 21px;
+  }
+  .boards-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Board: one column at a time, snapping as you swipe across. */
+  .board-topbar {
+    padding: 10px 14px;
+  }
+  .board-title {
+    font-size: 15px;
+    min-width: 0;
+  }
+  .board-scroll {
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 14px;
+  }
+  .column {
+    width: min(84vw, 320px);
+    scroll-snap-align: start;
+  }
+  .search-box,
+  .search-box:focus-within {
+    width: 100%;
+  }
+
+  /* Dialogs read better as sheets on a small screen. */
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal,
+  .modal.wide {
+    max-width: 100%;
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
+    max-height: 88vh;
+  }
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+  .modal-actions .btn {
+    flex: 1;
+    justify-content: center;
+    min-height: 42px;
+  }
+
+  /* Thumb-sized hit areas. */
+  .btn-icon {
+    min-width: 38px;
+    min-height: 38px;
+  }
+  .side-item {
+    min-height: 42px;
+  }
+  .tour-actions {
+    width: 100%;
+  }
+  .tour-actions .btn {
+    flex: 1;
+    justify-content: center;
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 420px) {
+  .dash-head h1 {
+    font-size: 19px;
+  }
+  .column {
+    width: 88vw;
+  }
+  .tour-art {
+    font-size: 30px;
+  }
+}
+
+/* Respect a reduced-motion preference throughout. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

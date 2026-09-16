@@ -7,6 +7,7 @@ import BoardView from './components/BoardView';
 import Toasts from './components/Toasts';
 import CommandPalette from './components/CommandPalette';
 import Modal from './components/Modal';
+import Tour from './components/Tour';
 
 const SHORTCUTS: [string, string][] = [
   ['Ctrl K', 'Open the command palette'],
@@ -123,6 +124,7 @@ export default function App() {
       </AnimatePresence>
       <AnimatePresence>
         {paletteOpen && user && <CommandPalette key="palette" />}
+        {user && <Tour key="tour" />}
         {showShortcuts && (
           <Modal key="shortcuts" onClose={() => setShowShortcuts(false)}>
             <h3>Keyboard shortcuts</h3>

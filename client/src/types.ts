@@ -3,6 +3,20 @@ export interface User {
   name: string;
   email: string;
   avatarColor: string;
+  /** Set by the server from ADMIN_EMAILS; gates the admin controls. */
+  isAdmin?: boolean;
+}
+
+export interface KeepaliveRun {
+  ranAt: number;
+  ok: boolean;
+  source: string;
+  detail: string;
+}
+
+export interface AdminStatus {
+  db: { ok: boolean; detail: string };
+  runs: KeepaliveRun[];
 }
 
 export interface Member extends User {

@@ -5,7 +5,8 @@ import {
   DragOverEvent,
   DragOverlay,
   DragStartEvent,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   useSensor,
   useSensors,
@@ -201,7 +202,14 @@ export default function BoardView() {
   const [bursts, setBursts] = useState<Burst[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  // Mouse and touch are separated on purpose. A single PointerSensor with a
+  // distance threshold starts dragging the moment a finger moves, which makes
+  // the board impossible to scroll on a phone. Touch instead waits for a short
+  // press, so a swipe scrolls and a hold picks the card up.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
+  );
 
   // Board-level shortcuts: "/" focuses the filter, "n" starts a card.
   useEffect(() => {
