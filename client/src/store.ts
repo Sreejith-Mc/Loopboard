@@ -24,6 +24,7 @@ interface State {
   boards: BoardSummary[];
   board: Board | null;
   boardLoading: boolean;
+  workspaceLoading: boolean;
   toasts: Toast[];
   theme: Theme;
   openCardId: string | null;
@@ -144,7 +145,8 @@ export const useStore = create<State>((set, get) => ({
   teams: [],
   boards: [],
   board: null,
-  boardLoading: false,
+  boardLoading: true,
+  workspaceLoading: true,
   toasts: [],
   theme: startTheme,
   openCardId: null,
@@ -200,16 +202,18 @@ export const useStore = create<State>((set, get) => ({
   init: async () => {
     try {
       const { user } = await api.get<{ user: User }>('/api/auth/me');
+      localStorage.setItem('lb-had-session', '1');
       const boardId = boardIdFromHash();
+      if (!boardId) set({ boardLoading: false });
       if (boardId) {
         // Deep link straight into the board — no dashboard flash.
         try {
           const { board } = await api.get<{ board: Board }>(`/api/boards/${boardId}`);
-          set({ user, authChecked: true, board });
+          set({ user, authChecked: true, board, boardLoading: false });
           connectEvents(board.id, () => void get().refreshBoard());
         } catch {
           window.location.hash = '';
-          set({ user, authChecked: true });
+          set({ user, authChecked: true, boardLoading: false });
         }
         void get().loadWorkspace();
       } else {
@@ -217,7 +221,8 @@ export const useStore = create<State>((set, get) => ({
         await get().loadWorkspace();
       }
     } catch {
-      set({ authChecked: true });
+      localStorage.removeItem('lb-had-session');
+      set({ authChecked: true, workspaceLoading: false, boardLoading: false });
     }
     void get().loadAdminStatus();
     window.addEventListener('hashchange', async () => {
@@ -253,12 +258,17 @@ export const useStore = create<State>((set, get) => ({
     }
     stopLiveSync();
     window.location.hash = '';
-    set({ user: null, teams: [], boards: [], board: null, adminStatus: null });
+    localStorage.removeItem('lb-had-session');
+    set({ user: null, teams: [], boards: [], board: null, adminStatus: null, workspaceLoading: false, boardLoading: false });
   },
 
   loadWorkspace: async () => {
-    const data = await api.get<{ teams: Team[]; boards: BoardSummary[] }>('/api/workspace');
-    set({ teams: data.teams, boards: data.boards });
+    try {
+      const data = await api.get<{ teams: Team[]; boards: BoardSummary[] }>('/api/workspace');
+      set({ teams: data.teams, boards: data.boards });
+    } finally {
+      set({ workspaceLoading: false });
+    }
   },
 
   openBoard: async (id) => {

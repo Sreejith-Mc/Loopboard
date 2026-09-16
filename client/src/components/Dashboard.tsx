@@ -7,6 +7,7 @@ import Avatar from './Avatar';
 import Modal from './Modal';
 import ThemeToggle from './ThemeToggle';
 import AdminPanel from './AdminPanel';
+import { BoardTilesSkeleton } from './Skeletons';
 import type { Team } from '../types';
 
 function NewBoardModal({ teamId, onClose }: { teamId: string | null; onClose: () => void }) {
@@ -173,7 +174,7 @@ function TeamModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function Dashboard() {
-  const { user, teams, boards, openBoard, logout, setTourOpen, menuOpen, setMenuOpen } = useStore();
+  const { user, teams, boards, openBoard, logout, setTourOpen, menuOpen, setMenuOpen, workspaceLoading } = useStore();
   const [scope, setScope] = useState<'all' | 'personal' | string>('all');
   const [newBoard, setNewBoard] = useState(false);
   const [teamModal, setTeamModal] = useState(false);
@@ -303,7 +304,9 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {visible.length === 0 ? (
+        {workspaceLoading ? (
+          <BoardTilesSkeleton />
+        ) : visible.length === 0 ? (
           <div className="empty-state">
             <div className="big">🌤️</div>
             <h3>Nothing here yet</h3>

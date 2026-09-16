@@ -8,6 +8,7 @@ import Toasts from './components/Toasts';
 import CommandPalette from './components/CommandPalette';
 import Modal from './components/Modal';
 import Tour from './components/Tour';
+import { BoardSkeleton, DashboardSkeleton } from './components/Skeletons';
 
 const SHORTCUTS: [string, string][] = [
   ['Ctrl K', 'Open the command palette'],
@@ -45,7 +46,7 @@ function isTyping() {
 }
 
 export default function App() {
-  const { authChecked, user, board, init, paletteOpen, setPaletteOpen } = useStore();
+  const { authChecked, user, board, boardLoading, init, paletteOpen, setPaletteOpen } = useStore();
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   useEffect(() => {
@@ -68,18 +69,23 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  let view: 'loading' | 'auth' | 'dash' | 'board';
+  let view: 'loading' | 'auth' | 'dash' | 'board' | 'board-loading';
   if (!authChecked) view = 'loading';
   else if (!user) view = 'auth';
   else if (board) view = 'board';
+  else if (boardLoading) view = 'board-loading';
   else view = 'dash';
 
+  if (view === 'board-loading') return <BoardSkeleton />;
+
   if (view === 'loading') {
-    return (
-      <div className="page-loading">
-        <div className="spin" />
-      </div>
-    );
+    // Show the shell the user is actually heading for. We can't know whether
+    // the session is still valid until /me answers, so lean on whether the
+    // last visit was signed in — a returning user gets the real layout
+    // straight away, and a signed-out visitor gets no misleading scaffolding.
+    const expectSession = localStorage.getItem('lb-had-session') === '1';
+    if (!expectSession) return <div className="page-loading" />;
+    return window.location.hash.startsWith('#/board/') ? <BoardSkeleton /> : <DashboardSkeleton />;
   }
 
   return (

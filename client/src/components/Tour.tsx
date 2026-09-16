@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../store';
@@ -91,7 +91,6 @@ export default function Tour() {
   const [i, setI] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const [narrow, setNarrow] = useState(() => window.innerWidth < 720);
-  const cardRef = useRef<HTMLDivElement>(null);
 
   const step = STEPS[i];
 
@@ -232,7 +231,6 @@ export default function Tour() {
       <AnimatePresence mode="wait">
         <motion.div
           key={i}
-          ref={cardRef}
           className="tour-card"
           style={cardStyle}
           initial={{ opacity: 0, scale: 0.97, y: 6 }}
