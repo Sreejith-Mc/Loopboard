@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api, ApiError, CLIENT_ID } from './api';
+import { api, ApiError } from './api';
 import type { Board, BoardSummary, Card, Team, User } from './types';
 
 export interface Toast {
@@ -68,25 +68,43 @@ interface State {
 }
 
 let toastSeq = 0;
-let eventSource: EventSource | null = null;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let lastVersion = 0;
+
+/** How often to ask the server whether the open board changed. */
+const POLL_MS = 4000;
 
 function boardIdFromHash(): string | null {
   const m = window.location.hash.match(/^#\/board\/([\w-]+)/);
   return m ? m[1] : null;
 }
 
-/** Subscribe to a board's live-sync stream; refetch on teammates' edits. */
+/** Stop polling the board that was open. */
+function stopLiveSync() {
+  if (pollTimer !== null) clearInterval(pollTimer);
+  pollTimer = null;
+  lastVersion = 0;
+}
+
+/**
+ * Live sync, by polling. Serverless functions can't hold open the long-lived
+ * SSE connection this used to use, so we poll a tiny version endpoint instead
+ * and only refetch the whole board when its updatedAt actually moves.
+ */
 function connectEvents(boardId: string, onRemoteChange: () => void) {
-  eventSource?.close();
-  eventSource = new EventSource(`/api/boards/${boardId}/events`);
-  eventSource.onmessage = (ev) => {
+  stopLiveSync();
+  pollTimer = setInterval(async () => {
+    // A backgrounded tab has nothing to redraw; skip the request entirely.
+    if (document.hidden) return;
     try {
-      const data = JSON.parse(ev.data);
-      if (data.originClientId !== CLIENT_ID) onRemoteChange();
+      const { updatedAt } = await api.get<{ updatedAt: number }>(`/api/boards/${boardId}/version`);
+      // The first tick only establishes a baseline, so it never refetches.
+      if (lastVersion && updatedAt > lastVersion) onRemoteChange();
+      lastVersion = Math.max(lastVersion, updatedAt);
     } catch {
-      /* ignore malformed events */
+      /* transient failure — just try again on the next tick */
     }
-  };
+  }, POLL_MS);
 }
 
 /** Reorder the flat card list so `cardId` sits at `index` within `columnId`. */
@@ -182,8 +200,7 @@ export const useStore = create<State>((set, get) => ({
     } catch {
       /* session may already be gone */
     }
-    eventSource?.close();
-    eventSource = null;
+    stopLiveSync();
     window.location.hash = '';
     set({ user: null, teams: [], boards: [], board: null });
   },
@@ -208,8 +225,7 @@ export const useStore = create<State>((set, get) => ({
   },
 
   closeBoard: () => {
-    eventSource?.close();
-    eventSource = null;
+    stopLiveSync();
     if (window.location.hash) window.location.hash = '';
     set({ board: null });
     void get().loadWorkspace();
