@@ -173,11 +173,10 @@ function TeamModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function Dashboard() {
-  const { user, teams, boards, openBoard, logout, setTourOpen } = useStore();
+  const { user, teams, boards, openBoard, logout, setTourOpen, menuOpen, setMenuOpen } = useStore();
   const [scope, setScope] = useState<'all' | 'personal' | string>('all');
   const [newBoard, setNewBoard] = useState(false);
   const [teamModal, setTeamModal] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const visible = useMemo(() => {
     if (scope === 'all') return boards;
@@ -229,7 +228,7 @@ export default function Dashboard() {
           Loopboard
         </span>
 
-        <button className={`side-item ${scope === 'all' ? 'active' : ''}`} onClick={() => setScope('all')}>
+        <button data-tour="boards" className={`side-item ${scope === 'all' ? 'active' : ''}`} onClick={() => setScope('all')}>
           <span>🗂️</span> All boards
           <span className="count">{boards.length}</span>
         </button>
@@ -238,7 +237,7 @@ export default function Dashboard() {
           <span className="count">{boards.filter((b) => !b.teamId).length}</span>
         </button>
 
-        <div className="side-section">
+        <div className="side-section" data-tour="teams">
           Teams
           <button className="btn-icon" title="Create or join a team" onClick={() => setTeamModal(true)} style={{ padding: 3 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -266,7 +265,7 @@ export default function Dashboard() {
             <div className="n">{user!.name}</div>
             <div className="e">{user!.email}</div>
           </div>
-          <button className="btn-icon" title="How Loopboard works" onClick={() => setTourOpen(true)}>
+          <button data-tour="help" className="btn-icon" title="How Loopboard works" onClick={() => setTourOpen(true)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" />
               <path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.6.2-.9.7-.9 1.3v.6" />
@@ -296,7 +295,7 @@ export default function Dashboard() {
                   : `${visible.length} board${visible.length === 1 ? '' : 's'} in flow`}
             </div>
           </div>
-          <button className="btn btn-primary" onClick={() => setNewBoard(true)}>
+          <button data-tour="new-board" className="btn btn-primary" onClick={() => setNewBoard(true)}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
@@ -320,6 +319,7 @@ export default function Dashboard() {
                   <motion.button
                     key={b.id}
                     className="board-tile"
+                    data-tour={i === 0 ? 'board-tile' : undefined}
                     layout
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}

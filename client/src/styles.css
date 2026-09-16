@@ -1775,53 +1775,82 @@ html[data-theme='dark'] .filter-chips button.on {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Tour
+   Tour — coachmarks anchored to real controls
+   The layer never takes pointer events, so the app stays usable and
+   clicking the highlighted control both works and advances the tour.
    ───────────────────────────────────────────────────────────── */
-.tour {
+.tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+}
+.tour-spot {
+  position: fixed;
+  border-radius: var(--r-md);
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px var(--blue),
+    0 0 0 6px rgba(91, 141, 239, 0.28),
+    0 0 0 9999px rgba(10, 16, 28, 0.55);
+}
+.tour-card {
+  position: fixed;
+  pointer-events: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 16px 16px 13px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 7px;
+  z-index: 91;
 }
-.tour-art {
-  font-size: 34px;
-  line-height: 1;
-  margin-bottom: 12px;
+.tour-step-n {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--blue);
 }
-.tour-body {
+.tour-card h4 {
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.012em;
+}
+.tour-card p {
+  font-size: 13px;
+  line-height: 1.6;
   color: var(--ink-soft);
-  font-size: 14px;
-  line-height: 1.62;
-  margin-top: 8px;
 }
-.tour-foot {
+.tour-card-foot {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
 }
 .tour-dots {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   margin-right: auto;
 }
 .tour-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  border: none;
-  padding: 0;
-  cursor: pointer;
   background: var(--line-strong);
-  transition: background 0.2s ease, width 0.2s ease;
+  transition: width 0.2s var(--ease-out), background 0.2s;
 }
 .tour-dot.on {
-  width: 20px;
-  border-radius: 4px;
+  width: 16px;
+  border-radius: 3px;
   background: var(--blue);
 }
-.tour-actions {
-  display: flex;
-  gap: 8px;
+.tour-skip,
+.tour-next {
+  padding: 7px 13px;
+  font-size: 12.5px;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1957,13 +1986,11 @@ html[data-theme='dark'] .filter-chips button.on {
   .side-item {
     min-height: 42px;
   }
-  .tour-actions {
-    width: 100%;
+  .tour-card {
+    border-radius: var(--r-lg);
   }
-  .tour-actions .btn {
-    flex: 1;
-    justify-content: center;
-    min-height: 42px;
+  .tour-card p {
+    font-size: 13.5px;
   }
 }
 
@@ -1973,9 +2000,6 @@ html[data-theme='dark'] .filter-chips button.on {
   }
   .column {
     width: 88vw;
-  }
-  .tour-art {
-    font-size: 30px;
   }
 }
 

@@ -32,9 +32,12 @@ interface State {
   adminStatus: AdminStatus | null;
   adminBusy: boolean;
   tourOpen: boolean;
+  /** Mobile drawer; in the store so the tour can open it for sidebar steps. */
+  menuOpen: boolean;
 
   setTheme: (theme: Theme) => void;
   setTourOpen: (open: boolean) => void;
+  setMenuOpen: (open: boolean) => void;
   loadAdminStatus: () => Promise<void>;
   runKeepalive: () => Promise<void>;
   setOpenCard: (id: string | null) => void;
@@ -150,6 +153,9 @@ export const useStore = create<State>((set, get) => ({
   adminStatus: null,
   adminBusy: false,
   tourOpen: false,
+  menuOpen: false,
+
+  setMenuOpen: (open) => set({ menuOpen: open }),
 
   setTourOpen: (open) => {
     if (!open) localStorage.setItem('lb-tour-seen', '1');
