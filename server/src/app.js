@@ -251,16 +251,38 @@ app.get('/api/workspace', requireAuth, a(async (req, res) => {
      FROM team_members tm JOIN teams t ON t.id = tm.team_id
      WHERE tm.user_id = $1 ORDER BY t.created_at`,
     [req.user.id]);
+
+  // "Today" is the viewer's calendar day, not the server's: the database runs
+  // on UTC, which is hours off from most people using this. The client sends
+  // its local date; anything malformed falls back to UTC rather than failing.
+  const today = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.today || ''))
+    ? String(req.query.today)
+    : new Date().toISOString().slice(0, 10);
+  // Due dates are stored as YYYY-MM-DD text, so these compare correctly as
+  // strings. "Soon" matches the board's Due-soon filter: within two days.
+  const soon = new Date(Date.parse(`${today}T00:00:00Z`) + 2 * 86_400_000).toISOString().slice(0, 10);
+
+  // Per-board counts for the dashboard. Columns are user-defined, so stages are
+  // positional: the first column is "to do", the last is "done", and anything
+  // between is in progress.
   const boards = await q(
     `SELECT b.id, b.name, b.emoji, b.team_id AS "teamId", b.owner_id AS "ownerId", b.updated_at AS "updatedAt",
        (SELECT COUNT(*) FROM cards WHERE board_id = b.id) AS "cardCount",
        (SELECT COUNT(*) FROM cards c JOIN columns col ON col.id = c.column_id
-         WHERE c.board_id = b.id AND col.position = (SELECT MAX(position) FROM columns WHERE board_id = b.id)) AS "doneCount"
+         WHERE c.board_id = b.id AND col.position = (SELECT MAX(position) FROM columns WHERE board_id = b.id)) AS "doneCount",
+       (SELECT COUNT(*) FROM cards c JOIN columns col ON col.id = c.column_id
+         WHERE c.board_id = b.id AND col.position = (SELECT MIN(position) FROM columns WHERE board_id = b.id)) AS "todoCount",
+       (SELECT COUNT(*) FROM cards c JOIN columns col ON col.id = c.column_id
+         WHERE c.board_id = b.id AND c.due_date IS NOT NULL AND c.due_date <= $3
+           AND col.position < (SELECT MAX(position) FROM columns WHERE board_id = b.id)) AS "dueSoonCount",
+       (SELECT COUNT(*) FROM cards c JOIN columns col ON col.id = c.column_id
+         WHERE c.board_id = b.id AND c.due_date IS NOT NULL AND c.due_date < $2
+           AND col.position < (SELECT MAX(position) FROM columns WHERE board_id = b.id)) AS "overdueCount"
      FROM boards b
      WHERE (b.team_id IS NULL AND b.owner_id = $1)
         OR b.team_id IN (SELECT team_id FROM team_members WHERE user_id = $1)
      ORDER BY b.updated_at DESC`,
-    [req.user.id]);
+    [req.user.id, today, soon]);
   res.json({ teams, boards });
 }));
 
