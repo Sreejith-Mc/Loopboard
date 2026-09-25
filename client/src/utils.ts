@@ -1,12 +1,12 @@
 import type { Priority } from './types';
 
 export const ACCENTS: Record<string, { dot: string; soft: string; text: string }> = {
-  blue: { dot: '#5b8def', soft: '#e8f0fe', text: '#3a6cd4' },
-  violet: { dot: '#9b7cf2', soft: '#f1ecfd', text: '#7a5ad0' },
-  green: { dot: '#2fbf94', soft: '#e2f7f0', text: '#1f8f6e' },
-  amber: { dot: '#f2a54a', soft: '#fdf1e0', text: '#b97516' },
-  rose: { dot: '#ef7ba4', soft: '#fdeaf1', text: '#d14b7e' },
-  cyan: { dot: '#43b7d8', soft: '#e4f5fa', text: '#3a80a8' },
+  blue: { dot: '#5b6cff', soft: '#ebedff', text: '#4150e0' },
+  violet: { dot: '#8b5cf6', soft: '#f1ebff', text: '#6d3fd6' },
+  green: { dot: '#14b88a', soft: '#ddf6ee', text: '#0b8a67' },
+  amber: { dot: '#f59e0b', soft: '#fdf1dc', text: '#b56d05' },
+  rose: { dot: '#ec5b91', soft: '#fde8f0', text: '#c93a72' },
+  cyan: { dot: '#0ea5c6', soft: '#dff4f9', text: '#0b7d97' },
 };
 export const ACCENT_NAMES = Object.keys(ACCENTS);
 
@@ -20,12 +20,12 @@ export const PRIORITIES: { value: Priority; label: string }[] = [
 
 // Translucent chip colors read well on both light and dark surfaces.
 const LABEL_PALETTES = [
-  { bg: 'rgba(91, 141, 239, 0.14)', text: '#5b8def' },
-  { bg: 'rgba(47, 191, 148, 0.14)', text: '#27a882' },
-  { bg: 'rgba(242, 165, 74, 0.16)', text: '#cf8a2e' },
-  { bg: 'rgba(155, 124, 242, 0.14)', text: '#9b7cf2' },
-  { bg: 'rgba(239, 123, 164, 0.14)', text: '#e0648f' },
-  { bg: 'rgba(67, 183, 216, 0.15)', text: '#3aa2c4' },
+  { bg: 'rgba(91, 108, 255, 0.14)', text: '#5b6cff' },
+  { bg: 'rgba(20, 184, 138, 0.14)', text: '#0fa37a' },
+  { bg: 'rgba(245, 158, 11, 0.16)', text: '#c97f06' },
+  { bg: 'rgba(139, 92, 246, 0.14)', text: '#8b5cf6' },
+  { bg: 'rgba(236, 91, 145, 0.14)', text: '#dc4a82' },
+  { bg: 'rgba(14, 165, 198, 0.15)', text: '#0c93b0' },
 ];
 
 export function labelColor(label: string) {
