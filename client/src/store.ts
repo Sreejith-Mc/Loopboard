@@ -269,7 +269,10 @@ export const useStore = create<State>((set, get) => ({
 
   loadWorkspace: async () => {
     try {
-      const data = await api.get<{ teams: Team[]; boards: BoardSummary[] }>('/api/workspace');
+      // The server counts due dates against *our* calendar day, not its UTC one.
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const data = await api.get<{ teams: Team[]; boards: BoardSummary[] }>(`/api/workspace?today=${today}`);
       set({ teams: data.teams, boards: data.boards });
     } finally {
       set({ workspaceLoading: false });
