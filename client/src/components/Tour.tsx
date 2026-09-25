@@ -52,7 +52,7 @@ const STEPS: Step[] = [
   },
   {
     target: 'help',
-    side: 'top',
+    side: 'right',
     inDrawer: true,
     title: 'Replay this any time',
     body: 'This button brings the walkthrough back whenever you want it.',
