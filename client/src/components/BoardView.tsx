@@ -1,13 +1,19 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  CollisionDetection,
   DndContext,
   DragEndEvent,
   DragOverEvent,
   DragOverlay,
   DragStartEvent,
+  MeasuringStrategy,
   MouseSensor,
   TouchSensor,
-  closestCorners,
+  UniqueIdentifier,
+  closestCenter,
+  getFirstCollision,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -190,8 +196,16 @@ function BoardMenu({ onClose, onDelete }: { onClose: () => void; onDelete: () =>
 type QuickFilter = 'all' | 'mine' | 'due';
 
 export default function BoardView() {
-  const { board, user, closeBoard, renameBoard, deleteBoard, moveCardLocal, commitCardMove, openCardId, setOpenCard, setQuickAddColumn } = useStore();
+  const { board, user, closeBoard, renameBoard, deleteBoard, moveCardLocal, commitCardMove, openCardId, setOpenCard, setQuickAddColumn, setDragging } = useStore();
   const [activeCard, setActiveCard] = useState<Card | null>(null);
+  const [overlayWidth, setOverlayWidth] = useState<number | undefined>();
+  // Scroll-snap is switched off for the length of a drag (see .board-scroll.dragging).
+  const [snapOff, setSnapOff] = useState(false);
+  const snapTimer = useRef<number | undefined>(undefined);
+  const lastOverId = useRef<UniqueIdentifier | null>(null);
+  const recentlyMoved = useRef(false);
+  // Where the card started, so a cancel can put it back and a no-op drop can skip the save.
+  const origin = useRef<{ columnId: string; index: number } | null>(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<QuickFilter>('all');
   const [invite, setInvite] = useState(false);
@@ -210,6 +224,58 @@ export default function BoardView() {
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 8 } }),
   );
+
+  // Leaving the board mid-drag must not strand the app in "dragging" mode,
+  // which would pause live sync indefinitely.
+  useEffect(
+    () => () => {
+      window.clearTimeout(snapTimer.current);
+      setDragging(false);
+    },
+    [setDragging],
+  );
+
+  // Moving a card into another column shifts the layout under the pointer for
+  // one frame, which can make the collision flip straight back. Hold the
+  // previous target until the DOM has settled.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      recentlyMoved.current = false;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [board?.cards]);
+
+  /**
+   * Finger first. The default strategies compare the dragged card's rectangle
+   * against every target, and with phone-width columns the nearest corner is
+   * often a card in the wrong column. Instead: whatever is physically under
+   * the pointer wins; if that is a column, narrow to the nearest card inside
+   * it. Only when the pointer is over nothing do we fall back to overlap.
+   */
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    const b = useStore.getState().board;
+    const underPointer = pointerWithin(args);
+    const hits = underPointer.length > 0 ? underPointer : rectIntersection(args);
+    let overId = getFirstCollision(hits, 'id');
+
+    if (overId != null && b) {
+      if (b.columns.some((c) => c.id === overId)) {
+        const inColumn = new Set(b.cards.filter((c) => c.columnId === overId).map((c) => c.id));
+        if (inColumn.size > 0) {
+          const nearest = closestCenter({
+            ...args,
+            droppableContainers: args.droppableContainers.filter((d) => inColumn.has(String(d.id))),
+          });
+          if (nearest[0]) overId = nearest[0].id;
+        }
+      }
+      lastOverId.current = overId;
+      return [{ id: overId }];
+    }
+
+    if (recentlyMoved.current) lastOverId.current = args.active.id;
+    return lastOverId.current != null ? [{ id: lastOverId.current }] : [];
+  }, []);
 
   // Board-level shortcuts: "/" focuses the filter, "n" starts a card.
   useEffect(() => {
@@ -266,55 +332,101 @@ export default function BoardView() {
     setTimeout(() => setBursts((b) => b.filter((x) => x.id !== id)), 1000);
   }
 
-  function resolveColumnId(overId: string | number): string | null {
-    if (!board) return null;
-    if (board.columns.some((c) => c.id === overId)) return overId as string;
-    const overCard = board.cards.find((c) => c.id === overId);
-    return overCard ? overCard.columnId : null;
+  // Handlers read the store directly rather than the `board` captured by this
+  // render: onDragOver mutates the board, and a drop that lands before React
+  // re-renders would otherwise compute its index from the pre-move layout.
+  const fresh = () => useStore.getState().board;
+
+  function columnOf(b: NonNullable<typeof board>, id: UniqueIdentifier): string | null {
+    if (b.columns.some((c) => c.id === id)) return id as string;
+    return b.cards.find((c) => c.id === id)?.columnId ?? null;
+  }
+
+  function cardsIn(b: NonNullable<typeof board>, columnId: string) {
+    return b.cards.filter((c) => c.columnId === columnId).sort((x, y) => x.position - y.position);
+  }
+
+  function endDrag() {
+    setActiveCard(null);
+    setDragging(false);
+    lastOverId.current = null;
+    // Re-enable snapping only after the drop animation, or the board jumps to
+    // a snap point while the card is still flying into place.
+    window.clearTimeout(snapTimer.current);
+    snapTimer.current = window.setTimeout(() => setSnapOff(false), 320);
   }
 
   function onDragStart({ active }: DragStartEvent) {
-    setActiveCard(board!.cards.find((c) => c.id === active.id) ?? null);
+    const b = fresh();
+    const card = b?.cards.find((c) => c.id === active.id);
+    if (!b || !card) return;
+    origin.current = { columnId: card.columnId, index: cardsIn(b, card.columnId).findIndex((c) => c.id === card.id) };
+    setActiveCard(card);
+    setOverlayWidth(active.rect.current.initial?.width);
+    setDragging(true);
+    window.clearTimeout(snapTimer.current);
+    setSnapOff(true);
   }
 
   function onDragOver({ active, over }: DragOverEvent) {
-    if (!over || !board) return;
-    const card = board.cards.find((c) => c.id === active.id);
-    const overColId = resolveColumnId(over.id);
-    if (!card || !overColId || card.columnId === overColId) return;
-    // Card dragged over another column: move it there optimistically so the
-    // preview reflows. Final position is committed on drop.
-    const targetCards = board.cards.filter((c) => c.columnId === overColId).sort((a, b) => a.position - b.position);
-    const overIndex = targetCards.findIndex((c) => c.id === over.id);
-    moveCardLocal(card.id, overColId, overIndex === -1 ? targetCards.length : overIndex);
+    const b = fresh();
+    if (!over || !b) return;
+    const card = b.cards.find((c) => c.id === active.id);
+    const toColumn = columnOf(b, over.id);
+    if (!card || !toColumn || card.columnId === toColumn) return;
+
+    // Crossing into another column: move the card there now so the preview
+    // reflows. Insert above or below the hovered card depending on which half
+    // of it the dragged card is over — otherwise dropping at the bottom of a
+    // column always lands one slot too high.
+    const target = cardsIn(b, toColumn);
+    const overIndex = target.findIndex((c) => c.id === over.id);
+    let index = target.length;
+    if (overIndex !== -1) {
+      const dragged = active.rect.current.translated;
+      const below = !!dragged && dragged.top > over.rect.top + over.rect.height / 2;
+      index = overIndex + (below ? 1 : 0);
+    }
+    recentlyMoved.current = true;
+    moveCardLocal(card.id, toColumn, index);
   }
 
   function onDragEnd({ active, over }: DragEndEvent) {
-    setActiveCard(null);
-    if (!board) return;
-    const card = board.cards.find((c) => c.id === active.id);
-    if (!card) return;
-    let columnId = card.columnId;
-    let index = card.position;
-    if (over) {
-      const overColId = resolveColumnId(over.id);
-      if (overColId) {
-        columnId = overColId;
-        const colCards = board.cards.filter((c) => c.columnId === overColId).sort((a, b) => a.position - b.position);
-        if (over.id === overColId) {
-          index = colCards.filter((c) => c.id !== card.id).length;
-        } else {
-          const i = colCards.findIndex((c) => c.id === over.id);
-          index = i === -1 ? colCards.length : i;
-        }
-      }
+    const start = origin.current;
+    origin.current = null;
+    endDrag();
+    const b = fresh();
+    const card = b?.cards.find((c) => c.id === active.id);
+    if (!b || !card) return;
+
+    // By now onDragOver has already put the card in the right column; all
+    // that is left is the final order within it.
+    const columnId = card.columnId;
+    const list = cardsIn(b, columnId);
+    let index = list.findIndex((c) => c.id === card.id);
+    if (over && over.id !== card.id && columnOf(b, over.id) === columnId) {
+      const overIndex = list.findIndex((c) => c.id === over.id);
+      if (overIndex !== -1) index = overIndex;
     }
+
+    // Picked up and put back where it was: nothing to save.
+    if (start && start.columnId === columnId && start.index === index) return;
+
     // Landing in the last column means "done" — a small celebration is due.
-    const lastCol = board.columns[board.columns.length - 1];
-    if (lastCol && columnId === lastCol.id && activeCard && activeCard.columnId !== lastCol.id) {
-      celebrate(columnId);
-    }
+    const lastCol = b.columns[b.columns.length - 1];
+    if (lastCol && columnId === lastCol.id && start && start.columnId !== lastCol.id) celebrate(columnId);
+
     void commitCardMove(card.id, columnId, index);
+  }
+
+  function onDragCancel({ active }: { active: { id: UniqueIdentifier } }) {
+    const start = origin.current;
+    origin.current = null;
+    endDrag();
+    // onDragOver may already have moved the card into another column locally.
+    // Put it back; otherwise it sits there unsaved until the next refresh
+    // yanks it home, which looks exactly like a lost move.
+    if (start) moveCardLocal(String(active.id), start.columnId, start.index);
   }
 
   const openCardData = openCardId ? board.cards.find((c) => c.id === openCardId) : null;
@@ -425,8 +537,19 @@ export default function BoardView() {
         </div>
       </header>
 
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => setActiveCard(null)}>
-        <div className="board-scroll" onMouseDown={() => menu && setMenu(false)}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={collisionDetection}
+        // Cards change columns mid-drag, so target rectangles go stale quickly;
+        // re-measure continuously rather than trusting the drag-start layout.
+        measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+        autoScroll={{ threshold: { x: 0.18, y: 0.14 }, acceleration: 14 }}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+        onDragCancel={onDragCancel}
+      >
+        <div className={`board-scroll${snapOff ? ' dragging' : ''}`} onMouseDown={() => menu && setMenu(false)}>
           {board.columns.map((col) => (
             <ColumnView key={col.id} column={col} cards={cardsByColumn.get(col.id) ?? []} members={board.members} onOpenCard={(c) => setOpenCard(c.id)} dragActive={!!activeCard} />
           ))}
@@ -439,7 +562,7 @@ export default function BoardView() {
         </div>
         <DragOverlay dropAnimation={{ duration: 220, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }}>
           {activeCard && (
-            <div className="card-item overlay" style={{ width: 268 }}>
+            <div className="card-item overlay" style={{ width: overlayWidth ?? 268 }}>
               <CardBody card={activeCard} members={board.members} />
             </div>
           )}
