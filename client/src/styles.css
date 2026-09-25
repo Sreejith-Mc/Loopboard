@@ -1,36 +1,50 @@
 /* ============ Loopboard design system ============ */
 
 :root {
-  --bg: #eef2f9;
-  --bg-deep: #e6ebf6;
+  /* Base */
+  --bg: #eef1fa;
+  --bg-deep: #e4e9f6;
   --surface: #ffffff;
-  --surface-dim: #f6f8fc;
-  --ink: #1e2a44;
-  --ink-soft: #51617f;
-  --ink-mute: #8b98b0;
-  --line: #e3e9f3;
-  --line-strong: #d2dbea;
+  --surface-dim: rgba(244, 246, 252, 0.82);
+  --ink: #131a33;
+  --ink-soft: #4b5677;
+  --ink-mute: #8790ab;
+  --line: #e2e7f2;
+  --line-strong: #cfd7e8;
 
-  --blue: #5b8def;
-  --blue-soft: #e8f0fe;
-  --violet: #9b7cf2;
-  --violet-soft: #f1ecfd;
-  --green: #2fbf94;
-  --green-soft: #e2f7f0;
-  --amber: #f2a54a;
-  --amber-soft: #fdf1e0;
-  --rose: #ef7ba4;
-  --rose-soft: #fdeaf1;
-  --cyan: #43b7d8;
-  --cyan-soft: #e4f5fa;
+  /* Accents: one family, evenly spaced in hue and close in weight */
+  --blue: #5b6cff;
+  --blue-soft: #ebedff;
+  --violet: #8b5cf6;
+  --violet-soft: #f1ebff;
+  --green: #14b88a;
+  --green-soft: #ddf6ee;
+  --amber: #f59e0b;
+  --amber-soft: #fdf1dc;
+  --rose: #ec5b91;
+  --rose-soft: #fde8f0;
+  --cyan: #0ea5c6;
+  --cyan-soft: #dff4f9;
   --red: #e5484d;
 
-  --shadow-xs: 0 1px 2px rgba(30, 42, 68, 0.06);
-  --shadow-sm: 0 1px 2px rgba(30, 42, 68, 0.05), 0 4px 12px rgba(30, 42, 68, 0.06);
-  --shadow-md: 0 2px 4px rgba(30, 42, 68, 0.05), 0 12px 28px rgba(30, 42, 68, 0.1);
-  --shadow-lg: 0 4px 8px rgba(30, 42, 68, 0.08), 0 24px 48px rgba(30, 42, 68, 0.16);
+  /* Glass. Three opacities for three jobs: panes that sit on the ambient
+     backdrop, chrome that must stay legible over scrolling content, and
+     cards, which carry the most text and so need the most solid ground. */
+  --glass: rgba(255, 255, 255, 0.5);
+  --glass-strong: rgba(255, 255, 255, 0.74);
+  --glass-card: rgba(255, 255, 255, 0.86);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-edge: rgba(19, 26, 51, 0.07);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glass-blur: saturate(170%) blur(18px);
 
-  --r-sm: 8px;
+  --shadow-xs: 0 1px 2px rgba(19, 26, 51, 0.05);
+  --shadow-sm: 0 1px 2px rgba(19, 26, 51, 0.04), 0 6px 16px rgba(19, 26, 51, 0.06);
+  --shadow-md: 0 2px 6px rgba(19, 26, 51, 0.05), 0 14px 32px rgba(19, 26, 51, 0.1);
+  --shadow-lg: 0 6px 12px rgba(19, 26, 51, 0.06), 0 28px 56px rgba(19, 26, 51, 0.16);
+  --glow: 0 8px 24px rgba(91, 108, 255, 0.32);
+
+  --r-sm: 9px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-xl: 22px;
@@ -40,27 +54,37 @@
 }
 
 html[data-theme='dark'] {
-  --bg: #0f1420;
-  --bg-deep: #0b101a;
-  --surface: #1a2333;
-  --surface-dim: #151d2c;
-  --ink: #e8edf7;
-  --ink-soft: #a9b5cd;
-  --ink-mute: #6d7a99;
-  --line: #263049;
-  --line-strong: #35425f;
+  --bg: #090d1a;
+  --bg-deep: #070a14;
+  --surface: #141a2c;
+  --surface-dim: rgba(20, 26, 44, 0.72);
+  --ink: #e9edf8;
+  --ink-soft: #a7b1cb;
+  --ink-mute: #6f7a98;
+  --line: #232c45;
+  --line-strong: #323d5c;
 
-  --blue-soft: rgba(91, 141, 239, 0.16);
-  --violet-soft: rgba(155, 124, 242, 0.16);
-  --green-soft: rgba(47, 191, 148, 0.16);
-  --amber-soft: rgba(242, 165, 74, 0.16);
-  --rose-soft: rgba(239, 123, 164, 0.16);
-  --cyan-soft: rgba(67, 183, 216, 0.16);
+  /* Lifted so the primary keeps its contrast on a dark ground. */
+  --blue: #7382ff;
+  --blue-soft: rgba(115, 130, 255, 0.16);
+  --violet-soft: rgba(139, 92, 246, 0.18);
+  --green-soft: rgba(20, 184, 138, 0.16);
+  --amber-soft: rgba(245, 158, 11, 0.16);
+  --rose-soft: rgba(236, 91, 145, 0.16);
+  --cyan-soft: rgba(14, 165, 198, 0.16);
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.28);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.28), 0 12px 28px rgba(0, 0, 0, 0.38);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.32), 0 24px 48px rgba(0, 0, 0, 0.5);
+  --glass: rgba(18, 24, 42, 0.5);
+  --glass-strong: rgba(17, 23, 40, 0.74);
+  --glass-card: rgba(30, 38, 62, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-edge: rgba(0, 0, 0, 0.35);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28), 0 6px 16px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.3), 0 14px 32px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 6px 12px rgba(0, 0, 0, 0.34), 0 28px 56px rgba(0, 0, 0, 0.55);
+  --glow: 0 8px 26px rgba(115, 130, 255, 0.34);
 }
 
 * {
@@ -78,11 +102,38 @@ body,
 body {
   font-family: var(--font);
   background: var(--bg);
+  background-attachment: fixed;
   color: var(--ink);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+}
+
+/* Soft colour fields behind everything. Fixed and non-interactive, so it
+   costs one composited layer and never scrolls or catches a click. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(44% 40% at 10% 6%, rgba(91, 108, 255, 0.2), transparent 70%),
+    radial-gradient(38% 36% at 94% 10%, rgba(139, 92, 246, 0.16), transparent 70%),
+    radial-gradient(42% 42% at 80% 96%, rgba(14, 165, 198, 0.14), transparent 70%),
+    radial-gradient(34% 30% at 14% 92%, rgba(236, 91, 145, 0.1), transparent 70%);
+}
+html[data-theme='dark'] body::before {
+  background:
+    radial-gradient(44% 40% at 10% 6%, rgba(91, 108, 255, 0.24), transparent 70%),
+    radial-gradient(38% 36% at 94% 10%, rgba(139, 92, 246, 0.2), transparent 70%),
+    radial-gradient(42% 42% at 80% 96%, rgba(14, 165, 198, 0.14), transparent 70%),
+    radial-gradient(34% 30% at 14% 92%, rgba(236, 91, 145, 0.1), transparent 70%);
+}
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 button {
@@ -102,7 +153,7 @@ select {
 }
 
 ::selection {
-  background: rgba(91, 141, 239, 0.25);
+  background: rgba(91, 108, 255, 0.25);
 }
 
 body,
@@ -180,12 +231,12 @@ html[data-theme='dark'] .wip-badge {
   transform: none;
 }
 .btn-primary {
-  background: linear-gradient(180deg, #6a99f5, var(--blue));
+  background: linear-gradient(135deg, #7a89ff 0%, var(--blue) 55%, #7c5cf6 100%);
   color: #fff;
-  box-shadow: 0 1px 2px rgba(43, 84, 166, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 1px 2px rgba(52, 60, 190, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .btn-primary:hover {
-  box-shadow: 0 3px 10px rgba(43, 84, 166, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 3px 10px rgba(52, 60, 190, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .btn-ghost {
   background: transparent;
@@ -196,10 +247,10 @@ html[data-theme='dark'] .wip-badge {
   color: var(--ink);
 }
 .btn-subtle {
-  background: var(--surface);
+  background: var(--glass-card);
   color: var(--ink-soft);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-xs);
 }
 .btn-subtle:hover {
   border-color: var(--line-strong);
@@ -251,7 +302,7 @@ html[data-theme='dark'] .wip-badge {
 }
 .input:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3.5px rgba(91, 141, 239, 0.18);
+  box-shadow: 0 0 0 3.5px rgba(91, 108, 255, 0.18);
 }
 textarea.input {
   resize: vertical;
@@ -298,7 +349,7 @@ textarea.input {
   grid-template-columns: 1.12fr 1fr;
   gap: 16px;
   padding: 16px;
-  background: var(--bg);
+  background: transparent;
 }
 @media (max-width: 940px) {
   .auth-shell {
@@ -319,7 +370,7 @@ textarea.input {
   justify-content: space-between;
   padding: 34px 38px;
   color: #fff;
-  background: linear-gradient(158deg, #4d7ce8 0%, #6a63e8 46%, #3f9fca 100%);
+  background: linear-gradient(155deg, #5b6cff 0%, #8b5cf6 52%, #0ea5c6 100%);
   box-shadow: var(--shadow-md);
 }
 .auth-visual::before,
@@ -500,10 +551,12 @@ textarea.input {
 
 /* right: form panel */
 .auth-panel {
-  background: var(--surface);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border-radius: 26px;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-md);
   display: flex;
   flex-direction: column;
   padding: 30px 38px;
@@ -614,12 +667,12 @@ html[data-theme='dark'] .pw-eye:hover {
   font-size: 14.5px;
   font-weight: 700;
   color: #fff;
-  background: linear-gradient(180deg, #6a99f5, var(--blue));
-  box-shadow: 0 2px 6px rgba(43, 84, 166, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, #7a89ff 0%, var(--blue) 55%, #7c5cf6 100%);
+  box-shadow: 0 2px 6px rgba(52, 60, 190, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   transition: box-shadow 0.18s;
 }
 .btn-cta:hover {
-  box-shadow: 0 6px 16px rgba(43, 84, 166, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 16px rgba(52, 60, 190, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .btn-cta:disabled {
   opacity: 0.6;
@@ -649,8 +702,8 @@ html[data-theme='dark'] .pw-eye:hover {
   width: 30px;
   height: 30px;
   border-radius: 9px;
-  background: linear-gradient(135deg, #6a99f5, var(--blue));
-  box-shadow: 0 2px 6px rgba(43, 84, 166, 0.35);
+  background: linear-gradient(135deg, #7a89ff 0%, var(--blue) 50%, #8b5cf6 100%);
+  box-shadow: 0 4px 12px rgba(91, 108, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -663,12 +716,11 @@ html[data-theme='dark'] .pw-eye:hover {
   grid-template-columns: 264px 1fr;
 }
 .sidebar {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(10px);
-  border-right: 1px solid var(--line);
-}
-html[data-theme='dark'] .sidebar {
-  background: rgba(21, 29, 44, 0.8);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-right: 1px solid var(--glass-border);
+  box-shadow: 1px 0 0 var(--glass-edge);
 }
 .sidebar {
   display: flex;
@@ -775,10 +827,12 @@ html[data-theme='dark'] .sidebar {
   gap: 18px;
 }
 .board-tile {
-  background: var(--surface);
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border-radius: var(--r-lg);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-sm);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -842,7 +896,7 @@ html[data-theme='dark'] .sidebar {
 .board-tile-new:hover {
   border-color: var(--blue);
   color: var(--blue);
-  background: rgba(91, 141, 239, 0.04);
+  background: rgba(91, 108, 255, 0.04);
 }
 
 .empty-state {
@@ -872,13 +926,12 @@ html[data-theme='dark'] .sidebar {
   align-items: center;
   gap: 12px;
   padding: 14px 24px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 1px 0 var(--glass-edge);
   flex-shrink: 0;
-}
-html[data-theme='dark'] .board-topbar {
-  background: rgba(21, 29, 44, 0.8);
 }
 .board-topbar {
   flex-wrap: wrap;
@@ -925,7 +978,7 @@ html[data-theme='dark'] .board-topbar {
 }
 .board-title input:focus {
   background: var(--surface);
-  box-shadow: 0 0 0 2.5px rgba(91, 141, 239, 0.25);
+  box-shadow: 0 0 0 2.5px rgba(91, 108, 255, 0.25);
 }
 .topbar-right {
   margin-left: auto;
@@ -937,8 +990,9 @@ html[data-theme='dark'] .board-topbar {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--surface);
-  border: 1.5px solid var(--line);
+  background: var(--glass-card);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: 0 0 0 1px var(--glass-edge);
   border-radius: var(--r-md);
   padding: 7px 12px;
   width: 210px;
@@ -947,7 +1001,7 @@ html[data-theme='dark'] .board-topbar {
 }
 .search-box:focus-within {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
+  box-shadow: 0 0 0 3px rgba(91, 108, 255, 0.15);
   width: 260px;
 }
 .search-box input {
@@ -973,21 +1027,18 @@ html[data-theme='dark'] .board-topbar {
 }
 
 /* ---------- column ---------- */
-html[data-theme='dark'] .column {
-  background: rgba(26, 35, 51, 0.5);
-  border-color: rgba(38, 48, 73, 0.9);
-}
 .column {
   width: 292px;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-xs);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-sm);
   border-radius: var(--r-xl);
   display: flex;
   flex-direction: column;
   max-height: 100%;
-  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   transition: box-shadow 0.2s;
 }
 .column.over-limit {
@@ -1026,7 +1077,7 @@ html[data-theme='dark'] .column {
 }
 .column-header input.name:focus {
   background: var(--surface);
-  box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.25);
+  box-shadow: 0 0 0 2px rgba(91, 108, 255, 0.25);
 }
 .col-count {
   font-size: 11.5px;
@@ -1107,15 +1158,15 @@ html[data-theme='dark'] .column {
 .add-column-btn:hover {
   border-color: var(--blue);
   color: var(--blue);
-  background: rgba(91, 141, 239, 0.05);
+  background: rgba(91, 108, 255, 0.05);
 }
 
 /* ---------- card ---------- */
 .card-item {
-  background: var(--surface);
+  background: var(--glass-card);
   border-radius: var(--r-lg);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-xs);
   padding: 12px 13px;
   display: flex;
   flex-direction: column;
@@ -1125,8 +1176,7 @@ html[data-theme='dark'] .column {
   position: relative;
 }
 .card-item:hover {
-  box-shadow: var(--shadow-sm);
-  border-color: var(--line-strong);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-md);
   translate: 0 -1.5px;
 }
 .card-item {
@@ -1136,11 +1186,20 @@ html[data-theme='dark'] .column {
 .card-item.ghost {
   opacity: 0.35;
 }
+/* A long press is how a card is picked up on touch. Without these, iOS
+   answers the same long press with a text-selection or link callout and the
+   drag never starts. `manipulation` still lets a swipe scroll the board. */
+.card-item {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
 .card-item.overlay {
   cursor: grabbing;
   box-shadow: var(--shadow-lg);
   transform: rotate(3deg) scale(1.03);
-  border-color: rgba(91, 141, 239, 0.35);
+  border-color: rgba(91, 108, 255, 0.35);
 }
 .card-title {
   font-weight: 600;
@@ -1235,8 +1294,9 @@ html[data-theme='dark'] .pr-urgent {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(23, 32, 54, 0.4);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 14, 30, 0.32);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1244,9 +1304,12 @@ html[data-theme='dark'] .pr-urgent {
   z-index: 50;
 }
 .modal {
-  background: var(--surface);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--r-xl);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-lg);
   width: 100%;
   max-width: 440px;
   padding: 28px;
@@ -1388,10 +1451,12 @@ html[data-theme='dark'] .pr-urgent {
   top: calc(100% + 4px);
   right: 8px;
   z-index: 30;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-md);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -1456,12 +1521,12 @@ html[data-theme='dark'] .filter-chips button.on {
 .drop-hint.eager {
   border-color: var(--blue);
   color: var(--blue);
-  background: rgba(91, 141, 239, 0.07);
+  background: rgba(91, 108, 255, 0.07);
   animation: hint-pulse 1.2s ease-in-out infinite;
 }
 @keyframes hint-pulse {
   50% {
-    background: rgba(91, 141, 239, 0.14);
+    background: rgba(91, 108, 255, 0.14);
   }
 }
 
@@ -1469,8 +1534,9 @@ html[data-theme='dark'] .filter-chips button.on {
 .palette-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(23, 32, 54, 0.35);
-  backdrop-filter: blur(3px);
+  background: rgba(10, 14, 30, 0.28);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -1480,10 +1546,12 @@ html[data-theme='dark'] .filter-chips button.on {
 .palette {
   width: 100%;
   max-width: 520px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1628,7 +1696,10 @@ html[data-theme='dark'] .filter-chips button.on {
 }
 .toast {
   pointer-events: auto;
-  background: #253352;
+  background: rgba(22, 28, 50, 0.84);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
   font-size: 13.5px;
   font-weight: 550;
@@ -1716,9 +1787,10 @@ html[data-theme='dark'] .filter-chips button.on {
 .admin-panel {
   margin-top: auto;
   padding: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--glass-border);
   border-radius: var(--r-md);
-  background: var(--surface-dim);
+  background: var(--glass-card);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge);
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -1880,16 +1952,18 @@ html[data-theme='dark'] .filter-chips button.on {
   pointer-events: none;
   box-shadow:
     0 0 0 2px var(--blue),
-    0 0 0 6px rgba(91, 141, 239, 0.28),
+    0 0 0 6px rgba(91, 108, 255, 0.28),
     0 0 0 9999px rgba(10, 16, 28, 0.55);
 }
 .tour-card {
   position: fixed;
   pointer-events: auto;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--shadow-lg);
   padding: 16px 16px 13px;
   display: flex;
   flex-direction: column;
@@ -1968,8 +2042,10 @@ html[data-theme='dark'] .filter-chips button.on {
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    border-bottom: 1px solid var(--line);
-    background: var(--surface);
+    border-bottom: 1px solid var(--glass-border);
+    background: var(--glass-strong);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
     position: sticky;
     top: 0;
     z-index: 30;
@@ -2001,11 +2077,7 @@ html[data-theme='dark'] .filter-chips button.on {
     transform: translateX(-102%);
     transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
     box-shadow: var(--shadow-lg);
-    background: var(--surface);
     overflow-y: auto;
-  }
-  html[data-theme='dark'] .sidebar {
-    background: var(--surface);
   }
   .sidebar.open {
     transform: translateX(0);
@@ -2036,6 +2108,12 @@ html[data-theme='dark'] .filter-chips button.on {
   .board-scroll {
     scroll-snap-type: x mandatory;
     scroll-padding-left: 14px;
+  }
+  /* Mandatory snapping and drag auto-scroll fight: every frame the drag nudges
+     the board sideways, the snap drags it back to a column edge, and the next
+     column is never reached. Snap is for swiping, so it sits out drags. */
+  .board-scroll.dragging {
+    scroll-snap-type: none;
   }
   .column {
     width: min(84vw, 320px);
