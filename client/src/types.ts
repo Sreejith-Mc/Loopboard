@@ -40,6 +40,12 @@ export interface BoardSummary {
   updatedAt: number;
   cardCount: number;
   doneCount: number;
+  /** Cards in the first column. */
+  todoCount: number;
+  /** Open cards due within two days of the viewer's today, overdue included. */
+  dueSoonCount: number;
+  /** Open cards whose due date has passed. */
+  overdueCount: number;
 }
 
 export type Priority = 'none' | 'low' | 'medium' | 'high' | 'urgent';
