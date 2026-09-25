@@ -4,3 +4,7 @@ server/data/
 *.tsbuildinfo
 *.log
 .DS_Store
+
+# local env
+.env
+.env*.local
