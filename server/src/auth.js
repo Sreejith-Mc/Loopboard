@@ -98,7 +98,7 @@ export async function requireAuth(req, res, next) {
   }
 }
 
-export const AVATAR_COLORS = ['#5B8DEF', '#34C99A', '#F2A54A', '#9B7CF2', '#EF7BA4', '#4AC1E0'];
+export const AVATAR_COLORS = ['#5B6CFF', '#14B88A', '#F59E0B', '#8B5CF6', '#EC5B91', '#0EA5C6'];
 export function pickAvatarColor(seed) {
   let sum = 0;
   for (const ch of seed) sum += ch.charCodeAt(0);
