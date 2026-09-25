@@ -5,7 +5,7 @@ export default function ThemeToggle() {
   const { theme, setTheme } = useStore();
   const next = theme === 'dark' ? 'light' : 'dark';
   return (
-    <button className="btn-icon" title={`Switch to ${next} mode`} onClick={() => setTheme(next)} style={{ position: 'relative', width: 33, height: 33 }}>
+    <button className="btn-icon" title={`Switch to ${next} mode`} onClick={() => setTheme(next)} style={{ position: 'relative', width: 38, height: 38 }}>
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
           key={theme}
