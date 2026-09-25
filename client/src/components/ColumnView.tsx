@@ -167,6 +167,7 @@ export default function ColumnView({
 
   return (
     <motion.section
+      ref={setNodeRef}
       className={`column${overLimit ? ' over-limit' : ''}`}
       data-col-id={column.id}
       initial={{ opacity: 0, y: 16 }}
@@ -213,14 +214,14 @@ export default function ColumnView({
       </header>
 
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-        <div ref={setNodeRef} className="column-cards">
+        <div className="column-cards">
           {cards.length === 0 && (
             <div className={`drop-hint${dragActive ? ' eager' : ''}`}>{dragActive ? 'Drop it here' : 'Nothing here — enjoy the calm'}</div>
           )}
           {/* No AnimatePresence here: an exit-animating clone would briefly register
               a second sortable with the same id and confuse an in-flight drag. */}
           {cards.map((card) => (
-            <motion.div key={card.id} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.16 }}>
+            <motion.div key={card.id} initial={dragActive ? false : { opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.16 }}>
               <CardItem card={card} members={members} onOpen={onOpenCard} />
             </motion.div>
           ))}
