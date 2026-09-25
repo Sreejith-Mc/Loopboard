@@ -35,10 +35,13 @@ interface State {
   tourOpen: boolean;
   /** Mobile drawer; in the store so the tour can open it for sidebar steps. */
   menuOpen: boolean;
+  /** A card is being dragged; remote refreshes must not replace the board mid-gesture. */
+  dragging: boolean;
 
   setTheme: (theme: Theme) => void;
   setTourOpen: (open: boolean) => void;
   setMenuOpen: (open: boolean) => void;
+  setDragging: (on: boolean) => void;
   loadAdminStatus: () => Promise<void>;
   runKeepalive: () => Promise<void>;
   setOpenCard: (id: string | null) => void;
@@ -105,7 +108,7 @@ function connectEvents(boardId: string, onRemoteChange: () => void) {
   stopLiveSync();
   pollTimer = setInterval(async () => {
     // A backgrounded tab has nothing to redraw; skip the request entirely.
-    if (document.hidden) return;
+    if (document.hidden || useStore.getState().dragging) return;
     try {
       const { updatedAt } = await api.get<{ updatedAt: number }>(`/api/boards/${boardId}/version`);
       // The first tick only establishes a baseline, so it never refetches.
@@ -156,8 +159,10 @@ export const useStore = create<State>((set, get) => ({
   adminBusy: false,
   tourOpen: false,
   menuOpen: false,
+  dragging: false,
 
   setMenuOpen: (open) => set({ menuOpen: open }),
+  setDragging: (on) => set({ dragging: on }),
 
   setTourOpen: (open) => {
     if (!open) localStorage.setItem('lb-tour-seen', '1');
@@ -297,7 +302,7 @@ export const useStore = create<State>((set, get) => ({
     if (!id) return;
     try {
       const { board } = await api.get<{ board: Board }>(`/api/boards/${id}`);
-      if (get().board?.id === id) set({ board });
+      if (get().board?.id === id && !get().dragging) set({ board });
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) {
         get().toast('This board was deleted', 'info');
