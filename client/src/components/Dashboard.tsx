@@ -8,7 +8,7 @@ import Modal from './Modal';
 import ThemeToggle from './ThemeToggle';
 import AdminPanel from './AdminPanel';
 import { BoardTilesSkeleton } from './Skeletons';
-import type { Team } from '../types';
+import type { BoardSummary, Team } from '../types';
 
 function NewBoardModal({ teamId, onClose }: { teamId: string | null; onClose: () => void }) {
   const { createBoard, openBoard, teams } = useStore();
@@ -173,8 +173,76 @@ function TeamModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** Line icons in one stroke style, so the sidebar and cards read as a set. */
+const ICONS = {
+  grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  lock: 'M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3',
+  users: 'M16 20v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 20v-1a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+  help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.6.2-.9.7-.9 1.3v.6M12 17h.01',
+  logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+  search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16M21 21l-4.3-4.3',
+  plus: 'M12 5v14M5 12h14',
+  menu: 'M4 7h16M4 12h16M4 17h16',
+  flow: 'M3 12h4l3-8 4 16 3-8h4',
+  check: 'M20 6 9 17l-5-5',
+  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M12 7v5l3 2',
+} as const;
+
+function Icon({ name, size = 18 }: { name: keyof typeof ICONS; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={ICONS[name]} />
+    </svg>
+  );
+}
+
+/**
+ * Four headline numbers for whatever the dashboard is scoped to. Every
+ * sub-line is derived from real data: there is no history table, so there is
+ * no "up 12% from last month" — a trend we can't measure isn't shown.
+ */
+function StatCards({ boards }: { boards: BoardSummary[] }) {
+  const sum = (k: 'cardCount' | 'doneCount' | 'todoCount' | 'dueSoonCount' | 'overdueCount') =>
+    boards.reduce((n, b) => n + (b[k] ?? 0), 0);
+  const cards = sum('cardCount');
+  const done = sum('doneCount');
+  // Clamped: on a one-column board the first and last column are the same one.
+  const inProgress = Math.max(0, cards - done - sum('todoCount'));
+  const dueSoon = sum('dueSoonCount');
+  const overdue = sum('overdueCount');
+  const pctDone = cards ? Math.round((done / cards) * 100) : 0;
+
+  const items: { label: string; value: number; note: string; icon: keyof typeof ICONS; tone?: 'hero' | 'warn' }[] = [
+    { label: 'Total boards', value: boards.length, note: `${cards} card${cards === 1 ? '' : 's'} across them`, icon: 'grid', tone: 'hero' },
+    { label: 'In progress', value: inProgress, note: 'Cards between the first and last column', icon: 'flow' },
+    { label: 'Done', value: done, note: cards ? `${pctDone}% of all cards` : 'Nothing finished yet', icon: 'check' },
+    { label: 'Due soon', value: dueSoon, note: overdue ? `${overdue} overdue` : 'Nothing overdue', icon: 'clock', tone: overdue ? 'warn' : undefined },
+  ];
+
+  return (
+    <div className="stats">
+      {items.map((s, i) => (
+        <motion.div
+          key={s.label}
+          className={`stat-card${s.tone ? ` ${s.tone}` : ''}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="stat-top">
+            <span className="stat-label">{s.label}</span>
+            <span className="stat-icon"><Icon name={s.icon} size={16} /></span>
+          </div>
+          <div className="stat-value">{s.value}</div>
+          <div className="stat-note">{s.note}</div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 export default function Dashboard() {
-  const { user, teams, boards, openBoard, logout, setTourOpen, menuOpen, setMenuOpen, workspaceLoading } = useStore();
+  const { user, teams, boards, openBoard, logout, setTourOpen, menuOpen, setMenuOpen, workspaceLoading, setPaletteOpen } = useStore();
   const [scope, setScope] = useState<'all' | 'personal' | string>('all');
   const [newBoard, setNewBoard] = useState(false);
   const [teamModal, setTeamModal] = useState(false);
@@ -199,23 +267,6 @@ export default function Dashboard() {
 
   return (
     <div className="dash">
-      <div className="mobile-bar">
-        <button className="btn-icon" aria-label="Open menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
-        </button>
-        <span className="logo">
-          <span className="logo-mark">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <rect x="5" y="4" width="5" height="16" rx="2.5" fill="#fff" />
-              <rect x="14" y="4" width="5" height="10" rx="2.5" fill="#fff" opacity="0.85" />
-            </svg>
-          </span>
-          Loopboard
-        </span>
-      </div>
-
       {menuOpen && <div className="drawer-backdrop" onClick={() => setMenuOpen(false)} />}
 
       <aside className={`sidebar${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(false)}>
@@ -229,79 +280,93 @@ export default function Dashboard() {
           Loopboard
         </span>
 
+        <div className="side-label">Menu</div>
         <button data-tour="boards" className={`side-item ${scope === 'all' ? 'active' : ''}`} onClick={() => setScope('all')}>
-          <span>🗂️</span> All boards
+          <Icon name="grid" /> All boards
           <span className="count">{boards.length}</span>
         </button>
         <button className={`side-item ${scope === 'personal' ? 'active' : ''}`} onClick={() => setScope('personal')}>
-          <span>🔒</span> Personal
+          <Icon name="lock" /> Personal
           <span className="count">{boards.filter((b) => !b.teamId).length}</span>
         </button>
 
-        <div className="side-section" data-tour="teams">
+        <div className="side-label side-label-action" data-tour="teams">
           Teams
-          <button className="btn-icon" title="Create or join a team" onClick={() => setTeamModal(true)} style={{ padding: 3 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+          <button className="btn-icon" title="Create or join a team" onClick={() => setTeamModal(true)}>
+            <Icon name="plus" size={14} />
           </button>
         </div>
         {teams.length === 0 && (
-          <button className="side-item" onClick={() => setTeamModal(true)} style={{ color: 'var(--ink-mute)' }}>
-            <span>✨</span> Create or join a team
+          <button className="side-item muted" onClick={() => setTeamModal(true)}>
+            <Icon name="users" /> Create or join a team
           </button>
         )}
         {teams.map((t) => (
           <button key={t.id} className={`side-item ${scope === t.id ? 'active' : ''}`} onClick={() => setScope(t.id)}>
-            <span>👥</span> {t.name}
+            <Icon name="users" /> {t.name}
             <span className="count">{t.memberCount}</span>
           </button>
         ))}
 
-        <AdminPanel />
+        <div className="side-label">General</div>
+        <button data-tour="help" className="side-item" onClick={() => setTourOpen(true)}>
+          <Icon name="help" /> How it works
+        </button>
+        <button className="side-item" onClick={() => void logout()}>
+          <Icon name="logout" /> Log out
+        </button>
 
-        <div className="side-footer">
-          <Avatar name={user!.name} color={user!.avatarColor} />
-          <div className="who">
-            <div className="n">{user!.name}</div>
-            <div className="e">{user!.email}</div>
-          </div>
-          <button data-tour="help" className="btn-icon" title="How Loopboard works" onClick={() => setTourOpen(true)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.6.2-.9.7-.9 1.3v.6" />
-              <path d="M12 17h.01" />
-            </svg>
-          </button>
-          <ThemeToggle />
-          <button className="btn-icon" title="Sign out" onClick={() => void logout()}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-            </svg>
-          </button>
-        </div>
+        <AdminPanel />
       </aside>
 
       <main className="dash-main">
-        <div className="dash-head">
+        <header className="topbar">
+          <button className="btn-icon topbar-menu" aria-label="Open menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
+            <Icon name="menu" />
+          </button>
+          {/* The palette already searches boards and cards; this is its front door. */}
+          <button className="search-trigger" onClick={() => setPaletteOpen(true)}>
+            <Icon name="search" size={16} />
+            <span>Search boards and cards</span>
+            <kbd>Ctrl K</kbd>
+          </button>
+          <div className="topbar-actions">
+            <ThemeToggle />
+            <div className="topbar-user">
+              <Avatar name={user!.name} color={user!.avatarColor} />
+              <div className="who">
+                <div className="n">{user!.name}</div>
+                <div className="e">{user!.email}</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="page-head">
           <div>
-            <h1>
-              {scopeTeam ? scopeTeam.name : scope === 'personal' ? 'Personal boards' : `${greeting}, ${user!.name.split(' ')[0]}`}
-            </h1>
+            <h1>{scopeTeam ? scopeTeam.name : scope === 'personal' ? 'Personal boards' : 'Dashboard'}</h1>
             <div className="sub">
               {scopeTeam
                 ? `Invite code ${scopeTeam.inviteCode} · ${scopeTeam.memberCount} member${scopeTeam.memberCount === 1 ? '' : 's'}`
-                : visible.length === 0
-                  ? 'Calm boards, clear heads.'
-                  : `${visible.length} board${visible.length === 1 ? '' : 's'} in flow`}
+                : `${greeting}, ${user!.name.split(' ')[0]}. Here's where your work stands.`}
             </div>
           </div>
-          <button data-tour="new-board" className="btn btn-primary" onClick={() => setNewBoard(true)}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            New board
-          </button>
+          <div className="page-actions">
+            <button data-tour="new-board" className="btn btn-primary btn-pill" onClick={() => setNewBoard(true)}>
+              <Icon name="plus" size={15} />
+              New board
+            </button>
+            <button className="btn btn-outline btn-pill" onClick={() => setTeamModal(true)}>
+              Add team
+            </button>
+          </div>
+        </div>
+
+        {!workspaceLoading && <StatCards boards={visible} />}
+
+        <div className="section-head">
+          <h2>Boards</h2>
+          <span>{visible.length} board{visible.length === 1 ? '' : 's'}</span>
         </div>
 
         {workspaceLoading ? (
