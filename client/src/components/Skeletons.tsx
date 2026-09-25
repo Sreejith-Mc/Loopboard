@@ -44,11 +44,24 @@ export function DashboardSkeleton() {
         ))}
       </aside>
       <main className="dash-main">
-        <div className="dash-head">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            <Bar w={230} h={22} />
-            <Bar w={120} h={11} />
+        <div className="topbar">
+          <span className="sk" style={{ width: 'min(380px, 60%)', height: 38, borderRadius: 999 }} />
+          <span className="sk" style={{ width: 38, height: 38, borderRadius: '50%', marginLeft: 'auto' }} />
+        </div>
+        <div className="page-head">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Bar w={200} h={28} />
+            <Bar w={260} h={12} />
           </div>
+        </div>
+        <div className="stats">
+          {[0, 1, 2, 3].map((i) => (
+            <div className="stat-card" key={i}>
+              <Bar w="55%" h={13} />
+              <span className="sk" style={{ width: 64, height: 40, marginTop: 10 }} />
+              <Bar w="70%" h={10} />
+            </div>
+          ))}
         </div>
         <BoardTilesSkeleton />
       </main>
